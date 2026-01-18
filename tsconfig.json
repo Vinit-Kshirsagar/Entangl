@@ -29,6 +29,6 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts"
-, "app/create-post"  ],
+, "app/create-post", "postcss.config.js"  ],
   "exclude": ["node_modules"]
 }
