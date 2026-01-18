@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ProfileHeader from './components/ProfileHeader';
@@ -47,6 +48,7 @@ const mockFollowers: FollowUser[] = [
 ];
 
 export default function ProfilePage() {
+  const router = useRouter();
   const [profile, setProfile] = useState(mockProfile);
   const [followers, setFollowers] = useState(mockFollowers);
   const [showFollowers, setShowFollowers] = useState(false);
@@ -68,13 +70,24 @@ export default function ProfilePage() {
     ));
   };
 
+  const handleLogout = () => {
+    // TODO: Clear Supabase session
+    console.log('Logging out...');
+    router.push('/login');
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar currentView="profile" userAvatar={profile.avatar} />
       
       <main className="max-w-4xl mx-auto px-4 pt-20 pb-8">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <ProfileHeader profile={profile} onFollowToggle={handleFollowToggle} />
+          <ProfileHeader 
+            profile={profile} 
+            onFollowToggle={handleFollowToggle}
+            onLogout={handleLogout}
+            isOwnProfile={true}
+          />
           
           <FollowStats
             posts={profile.posts}

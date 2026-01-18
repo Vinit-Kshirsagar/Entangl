@@ -7,21 +7,31 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+    
     // TODO: Implement Supabase auth
     console.log('Login:', { email, password });
-    router.push('/home');
+    
+    // Simulate login delay
+    setTimeout(() => {
+      setIsLoading(false);
+      router.push('/home');
+    }, 1000);
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center px-4">
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
-        <h1 className="text-3xl font-bold text-center mb-2 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-          Entangl
-        </h1>
-        <p className="text-center text-gray-600 mb-8">Welcome back!</p>
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+            SocialHub
+          </h1>
+          <p className="text-gray-600">Welcome back!</p>
+        </div>
         
         <form onSubmit={handleLogin} className="space-y-6">
           <div>
@@ -54,9 +64,10 @@ export default function LoginPage() {
           
           <button
             type="submit"
-            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all"
+            disabled={isLoading}
+            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Log In
+            {isLoading ? 'Logging in...' : 'Log In'}
           </button>
         </form>
         
