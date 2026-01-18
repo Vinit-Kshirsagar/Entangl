@@ -1,21 +1,32 @@
+import React from 'react';
+
 interface UserAvatarProps {
-  username: string;
-  size?: "small" | "medium" | "large";
+  src: string;
+  alt: string;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  className?: string;
 }
 
-export default function UserAvatar({ username, size = "medium" }: UserAvatarProps) {
+const UserAvatar: React.FC<UserAvatarProps> = ({ 
+  src, 
+  alt, 
+  size = 'md',
+  className = '' 
+}) => {
   const sizeClasses = {
-    small: "w-8 h-8 text-sm",
-    medium: "w-12 h-12 text-base",
-    large: "w-20 h-20 text-2xl"
+    sm: 'w-8 h-8',
+    md: 'w-11 h-11',
+    lg: 'w-16 h-16',
+    xl: 'w-32 h-32'
   };
 
-  // Get first letter of username for placeholder
-  const initial = username.charAt(0).toUpperCase();
-
   return (
-    <div className={`${sizeClasses[size]} rounded-full bg-blue-600 flex items-center justify-center text-white font-bold flex-shrink-0`}>
-      {initial}
-    </div>
+    <img
+      src={src}
+      alt={alt}
+      className={`${sizeClasses[size]} rounded-full object-cover ${className}`}
+    />
   );
-}
+};
+
+export default UserAvatar;

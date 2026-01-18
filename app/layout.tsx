@@ -1,13 +1,9 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
-import Navbar from "@/components/Navbar";
-
-const inter = Inter({ subsets: ["latin"] });
+import type { Metadata } from 'next';
+import './globals.css';
 
 export const metadata: Metadata = {
-  title: "Entangl - Connect & Share",
-  description: "A modern social media platform for meaningful connections",
+  title: 'Entangl - Connect & Share',
+  description: 'A modern social media platform',
 };
 
 export default function RootLayout({
@@ -17,12 +13,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
-        <Navbar />
-        <main className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-          {children}
-        </main>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
