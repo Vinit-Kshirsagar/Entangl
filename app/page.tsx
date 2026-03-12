@@ -31,7 +31,7 @@ export default function LandingPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-500 to-pink-500">
         <div className="text-white text-center">
-          <h1 className="text-6xl font-bold mb-4">SocialHub</h1>
+          <h1 className="text-6xl font-bold mb-4">Entangl</h1>
           <p className="text-xl">Loading...</p>
         </div>
       </div>

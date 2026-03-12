@@ -113,7 +113,7 @@ const Navbar: React.FC<NavbarProps> = ({
               onClick={() => router.push('/home')}
               className="text-xl md:text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent"
             >
-              SocialHub
+              Entangl
             </button>
             
             <div className="hidden md:block relative" ref={searchRef}>
