@@ -35,7 +35,7 @@ export const getFeedPosts = async (userId: string) => {
   return data
 }
 
-// Get all posts (alternative - direct query)
+// Get all posts (direct query)
 export const getAllPosts = async () => {
   const supabase = createClient()
   
@@ -59,8 +59,53 @@ export const getAllPosts = async () => {
     `)
     .order('created_at', { ascending: false })
 
-  if (error) throw error
-  return data
+  if (error) {
+    console.error('Error fetching posts:', error);
+    throw error;
+  }
+  
+  console.log('Raw posts from Supabase:', data); // Debug log
+  return data || [];
+}
+
+// Get posts by specific user
+export const getUserPosts = async (userId: string) => {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  
+  const { data, error } = await supabase
+    .from('posts')
+    .select(`
+      *,
+      profiles:user_id (
+        id,
+        username,
+        full_name,
+        avatar_url
+      ),
+      likes (
+        id,
+        user_id
+      ),
+      comments (
+        id
+      )
+    `)
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching user posts:', error);
+    throw error;
+  }
+  
+  // Transform the data to include isLiked status
+  const transformedData = data?.map(post => ({
+    ...post,
+    isLiked: user ? post.likes?.some((like: any) => like.user_id === user.id) : false
+  }))
+  
+  return transformedData || [];
 }
 
 // Create a new post
@@ -84,6 +129,50 @@ export const createPost = async (content: string, imageUrl?: string | null) => {
 
   if (error) throw error
   return data
+}
+
+// Delete a post
+export const deletePost = async (postId: string) => {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  
+  if (!user) throw new Error('Not authenticated')
+
+  // First, get the post to check ownership and get image URL
+  const { data: post, error: fetchError } = await supabase
+    .from('posts')
+    .select('user_id, image_url')
+    .eq('id', postId)
+    .single()
+
+  if (fetchError) throw fetchError
+  if (post.user_id !== user.id) throw new Error('Unauthorized')
+
+  // Delete associated image from storage if exists
+  if (post.image_url) {
+    try {
+      // Extract filename from URL
+      const urlParts = post.image_url.split('/')
+      const fileName = urlParts[urlParts.length - 1]
+      const folder = urlParts[urlParts.length - 2]
+      
+      if (fileName && folder) {
+        await supabase.storage
+          .from('post-images')
+          .remove([`${folder}/${fileName}`])
+      }
+    } catch (error) {
+      console.error('Error deleting image:', error)
+    }
+  }
+
+  // Delete the post (likes and comments will cascade delete)
+  const { error } = await supabase
+    .from('posts')
+    .delete()
+    .eq('id', postId)
+
+  if (error) throw error
 }
 
 // Like a post
@@ -129,17 +218,101 @@ export const uploadPostImage = async (file: File) => {
   if (!user) throw new Error('Not authenticated')
 
   const fileExt = file.name.split('.').pop()
-  const fileName = `${user.id}/${Math.random()}.${fileExt}`
+  const fileName = `${Math.random()}.${fileExt}`
+  const filePath = `${user.id}/${fileName}`
 
   const { data, error } = await supabase.storage
     .from('post-images')
-    .upload(fileName, file)
+    .upload(filePath, file)
 
   if (error) throw error
 
   const { data: { publicUrl } } = supabase.storage
     .from('post-images')
-    .getPublicUrl(fileName)
+    .getPublicUrl(filePath)
 
   return publicUrl
+}
+// Add to lib/posts.ts
+
+// Get comments for a post
+export const getPostComments = async (postId: string) => {
+  const supabase = createClient()
+  
+  const { data, error } = await supabase
+    .from('comments')
+    .select(`
+      *,
+      profiles:user_id (
+        id,
+        username,
+        full_name,
+        avatar_url
+      )
+    `)
+    .eq('post_id', postId)
+    .order('created_at', { ascending: true })
+
+  if (error) {
+    console.error('Error fetching comments:', error);
+    throw error;
+  }
+  
+  return data || [];
+}
+
+// Add a comment to a post
+export const addComment = async (postId: string, content: string) => {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  
+  if (!user) throw new Error('Not authenticated')
+
+  const { data, error } = await supabase
+    .from('comments')
+    .insert([
+      {
+        user_id: user.id,
+        post_id: postId,
+        content
+      }
+    ])
+    .select(`
+      *,
+      profiles:user_id (
+        id,
+        username,
+        full_name,
+        avatar_url
+      )
+    `)
+    .single()
+
+  if (error) throw error
+  return data
+}
+
+// Delete a comment
+export const deleteComment = async (commentId: string) => {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  
+  if (!user) throw new Error('Not authenticated')
+
+  // Check ownership
+  const { data: comment, error: fetchError } = await supabase
+    .from('comments')
+    .select('user_id')
+    .eq('id', commentId)
+    .single()
+
+  if (fetchError) throw fetchError
+  if (comment.user_id !== user.id) throw new Error('Unauthorized')
+
+  const { error } = await supabase
+    .from('comments')
+    .delete()
+    .eq('id', commentId)
+
+  if (error) throw error
 }

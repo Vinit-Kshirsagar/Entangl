@@ -114,7 +114,9 @@ export default function HomePage() {
             </button>
           </div>
         ) : (
-          <FeedList posts={posts} />
+          <FeedList posts={posts} onPostDelete={(postId) => {
+  setPosts(posts.filter(p => p.id !== postId));
+}} />
         )}
       </main>
       

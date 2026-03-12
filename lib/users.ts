@@ -235,3 +235,26 @@ export const getFollowing = async (userId: string) => {
 
   return following
 }
+// Add to lib/users.ts
+
+// Search users by username or name
+export const searchUsers = async (searchQuery: string) => {
+  const supabase = createClient()
+  
+  if (!searchQuery || searchQuery.trim().length === 0) {
+    return []
+  }
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, username, full_name, avatar_url, bio')
+    .or(`username.ilike.%${searchQuery}%,full_name.ilike.%${searchQuery}%`)
+    .limit(10)
+
+  if (error) {
+    console.error('Error searching users:', error);
+    throw error;
+  }
+
+  return data || [];
+}

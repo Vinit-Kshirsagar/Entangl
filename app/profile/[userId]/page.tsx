@@ -1,22 +1,24 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import ProfileHeader from './components/ProfileHeader';
-import FollowStats from './components/FollowStats';
-import FollowersList from './components/FollowersList';
-import FollowingList from './components/FollowingList';
-import UserPosts from './components/UserPosts';
+import ProfileHeader from '../components/ProfileHeader';
+import FollowStats from '../components/FollowStats';
+import FollowersList from '../components/FollowersList';
+import FollowingList from '../components/FollowingList';
+import UserPosts from '../components/UserPosts';
 import { getUserProfile, getFollowers, getFollowing, followUser as followUserApi, unfollowUser as unfollowUserApi } from '@/lib/users';
 import { getUserPosts } from '@/lib/posts';
 import { getCurrentUser } from '@/lib/auth';
-import { signOut } from '@/lib/auth';
 import { Post } from '@/lib/types';
 
-export default function ProfilePage() {
+export default function UserProfilePage() {
   const router = useRouter();
+  const params = useParams();
+  const userId = params.userId as string;
+
   const [profile, setProfile] = useState<any>(null);
   const [followers, setFollowers] = useState<any[]>([]);
   const [following, setFollowing] = useState<any[]>([]);
@@ -25,6 +27,7 @@ export default function ProfilePage() {
   const [showFollowing, setShowFollowing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentUserAvatar, setCurrentUserAvatar] = useState('');
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -37,17 +40,28 @@ export default function ProfilePage() {
 
         setCurrentUserId(user.id);
 
-        const profileData = await getUserProfile(user.id);
+        // If viewing own profile, redirect to /profile
+        if (user.id === userId) {
+          router.push('/profile');
+          return;
+        }
+
+        // Get current user profile for navbar avatar
+        const currentProfile = await getUserProfile(user.id);
+        setCurrentUserAvatar(currentProfile.avatar_url || '');
+
+        // Get target user's profile
+        const profileData = await getUserProfile(userId);
         setProfile(profileData);
 
-        const followersData = await getFollowers(user.id);
+        const followersData = await getFollowers(userId);
         setFollowers(followersData);
 
-        const followingData = await getFollowing(user.id);
+        const followingData = await getFollowing(userId);
         setFollowing(followingData);
 
         // Get user's posts
-        const userPostsData = await getUserPosts(user.id);
+        const userPostsData = await getUserPosts(userId);
         
         // Transform posts to match Post interface
         const transformedPosts: Post[] = userPostsData.map((post: any) => ({
@@ -75,8 +89,10 @@ export default function ProfilePage() {
       }
     };
 
-    loadProfile();
-  }, [router]);
+    if (userId) {
+      loadProfile();
+    }
+  }, [router, userId]);
 
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp);
@@ -93,45 +109,45 @@ export default function ProfilePage() {
     return date.toLocaleDateString();
   };
 
-  const handleFollowerFollowToggle = async (userId: string) => {
+  const handleFollowToggle = async () => {
     try {
-      const follower = followers.find(f => f.id === userId);
-      if (follower?.isFollowing) {
+      if (profile.isFollowing) {
         await unfollowUserApi(userId);
       } else {
         await followUserApi(userId);
       }
 
+      // Refresh profile
+      const updatedProfile = await getUserProfile(userId);
+      setProfile(updatedProfile);
+    } catch (error) {
+      console.error('Error toggling follow:', error);
+    }
+  };
+
+  const handleFollowerFollowToggle = async (followerId: string) => {
+    try {
+      const follower = followers.find(f => f.id === followerId);
+      if (follower?.isFollowing) {
+        await unfollowUserApi(followerId);
+      } else {
+        await followUserApi(followerId);
+      }
+
       setFollowers(followers.map(user => 
-        user.id === userId ? { ...user, isFollowing: !user.isFollowing } : user
+        user.id === followerId ? { ...user, isFollowing: !user.isFollowing } : user
       ));
     } catch (error) {
       console.error('Error toggling follow:', error);
     }
   };
 
-  const handleUnfollow = async (userId: string) => {
+  const handleUnfollow = async (followingId: string) => {
     try {
-      await unfollowUserApi(userId);
-      setFollowing(following.filter(user => user.id !== userId));
-      
-      // Refresh profile to update counts
-      const user = await getCurrentUser();
-      if (user) {
-        const profileData = await getUserProfile(user.id);
-        setProfile(profileData);
-      }
+      await unfollowUserApi(followingId);
+      setFollowing(following.filter(user => user.id !== followingId));
     } catch (error) {
       console.error('Error unfollowing:', error);
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      await signOut();
-      router.push('/login');
-    } catch (error) {
-      console.error('Error logging out:', error);
     }
   };
 
@@ -156,7 +172,7 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar currentView="profile" userAvatar={profile.avatar_url} />
+      <Navbar currentView="profile" userAvatar={currentUserAvatar} />
       
       <main className="max-w-4xl mx-auto px-4 pt-20 pb-8">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
@@ -170,11 +186,11 @@ export default function ProfilePage() {
               followers: profile.followers,
               following: profile.following,
               posts: profile.posts,
-              isFollowing: false
+              isFollowing: profile.isFollowing
             }}
-            onFollowToggle={() => {}}
-            onLogout={handleLogout}
-            isOwnProfile={true}
+            onFollowToggle={handleFollowToggle}
+            onLogout={() => {}}
+            isOwnProfile={false}
           />
           
           <FollowStats
