@@ -31,7 +31,7 @@ export default function LoginPage() {
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-            SocialHub
+            Entangl
           </h1>
           <p className="text-gray-600">Welcome back!</p>
         </div>
