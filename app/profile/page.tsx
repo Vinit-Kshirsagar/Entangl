@@ -64,6 +64,8 @@ export default function ProfilePage() {
           comments: post.comments?.length || 0,
           timestamp: formatTimestamp(post.created_at),
           isLiked: post.isLiked || false,
+          dislikes: post.dislikes?.length || 0,
+          isDisliked: post.isDisliked || false,
           isBookmarked: false
         }));
 

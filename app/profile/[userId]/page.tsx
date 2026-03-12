@@ -75,9 +75,11 @@ export default function UserProfilePage() {
           content: post.content,
           image: post.image_url,
           likes: post.likes?.length || 0,
+          dislikes: post.dislikes?.length || 0,
           comments: post.comments?.length || 0,
           timestamp: formatTimestamp(post.created_at),
           isLiked: post.isLiked || false,
+          isDisliked: post.isDisliked || false,
           isBookmarked: false
         }));
 
