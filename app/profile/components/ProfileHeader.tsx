@@ -1,8 +1,9 @@
 'use client';
 
 import React from 'react';
-import { LogOut } from 'lucide-react';
+import { LogOut, Settings } from 'lucide-react';
 import { UserProfile } from '@/lib/types';
+import { useRouter } from 'next/navigation';
 
 interface ProfileHeaderProps {
   profile: UserProfile;
@@ -17,6 +18,8 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   onLogout,
   isOwnProfile = true 
 }) => {
+  const router = useRouter();
+
   return (
     <>
       <div className="h-48 bg-gradient-to-r from-purple-400 via-pink-500 to-red-400"></div>
@@ -30,13 +33,22 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           />
           
           {isOwnProfile ? (
-            <button
-              onClick={onLogout}
-              className="px-6 py-2 rounded-full font-semibold transition-all bg-red-500 text-white hover:bg-red-600 hover:shadow-lg flex items-center space-x-2"
-            >
-              <LogOut className="w-4 h-4" />
-              <span>Logout</span>
-            </button>
+            <div className="flex space-x-3">
+              <button
+                onClick={() => router.push('/profile/edit')}
+                className="px-6 py-2 rounded-full font-semibold transition-all bg-purple-600 text-white hover:bg-purple-700 hover:shadow-lg flex items-center space-x-2"
+              >
+                <Settings className="w-4 h-4" />
+                <span>Edit Profile</span>
+              </button>
+              <button
+                onClick={onLogout}
+                className="px-6 py-2 rounded-full font-semibold transition-all bg-red-500 text-white hover:bg-red-600 hover:shadow-lg flex items-center space-x-2"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Logout</span>
+              </button>
+            </div>
           ) : (
             <button
               onClick={onFollowToggle}
@@ -53,7 +65,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
         
         <h1 className="text-2xl font-bold text-gray-900">{profile.name}</h1>
         <p className="text-gray-500 mb-3">@{profile.username}</p>
-        <p className="text-gray-700 mb-4">{profile.bio}</p>
+        {profile.bio && <p className="text-gray-700 mb-4">{profile.bio}</p>}
       </div>
     </>
   );

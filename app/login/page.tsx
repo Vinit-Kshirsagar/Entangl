@@ -2,25 +2,28 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { signIn } from '@/lib/auth';
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError('');
     
-    // TODO: Implement Supabase auth
-    console.log('Login:', { email, password });
-    
-    // Simulate login delay
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      await signIn(email, password);
       router.push('/home');
-    }, 1000);
+      router.refresh();
+    } catch (err: any) {
+      setError(err.message || 'Failed to login');
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -32,6 +35,12 @@ export default function LoginPage() {
           </h1>
           <p className="text-gray-600">Welcome back!</p>
         </div>
+        
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+            {error}
+          </div>
+        )}
         
         <form onSubmit={handleLogin} className="space-y-6">
           <div>

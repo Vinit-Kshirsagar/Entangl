@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { signUp } from '@/lib/auth';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -12,19 +13,28 @@ export default function RegisterPage() {
     password: '',
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError('');
     
-    // TODO: Implement Supabase auth
-    console.log('Register:', formData);
-    
-    // Simulate registration delay
-    setTimeout(() => {
+    try {
+      await signUp(
+        formData.email,
+        formData.password,
+        formData.name,
+        formData.username
+      );
+      
+      // Redirect to profile edit page to complete profile
+      alert('Account created! Please complete your profile.');
+      router.push('/profile/edit');
+    } catch (err: any) {
+      setError(err.message || 'Failed to create account');
       setIsLoading(false);
-      router.push('/home');
-    }, 1000);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -43,6 +53,12 @@ export default function RegisterPage() {
           </h1>
           <p className="text-gray-600">Create your account</p>
         </div>
+        
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+            {error}
+          </div>
+        )}
         
         <form onSubmit={handleRegister} className="space-y-5">
           <div>
@@ -71,6 +87,7 @@ export default function RegisterPage() {
               onChange={handleChange}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition"
               placeholder="johndoe"
+              minLength={3}
               required
             />
           </div>

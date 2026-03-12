@@ -12,7 +12,7 @@ export interface Post {
   id: string;
   author: User;
   content: string;
-  image?: string;
+  image?: string | null;
   likes: number;
   comments: number;
   timestamp: string;
