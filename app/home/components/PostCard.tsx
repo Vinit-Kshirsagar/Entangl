@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Heart, MessageCircle, Share2, Bookmark, MoreHorizontal, Trash2 } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Bookmark, MoreHorizontal, Trash2, ThumbsDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Post } from '@/lib/types';
 import UserAvatar from '@/components/UserAvatar';
-import { likePost, unlikePost, deletePost } from '@/lib/posts';
+import { likePost, unlikePost, dislikePost, undislikePost, deletePost } from '@/lib/posts';
 import { getCurrentUser } from '@/lib/auth';
 import CommentsModal from './CommentsModal';
+import LikesDislikesModal from './LikesDislikesModal';
 
 interface PostCardProps {
   post: Post;
@@ -17,12 +18,16 @@ interface PostCardProps {
 const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
   const router = useRouter();
   const [isLiked, setIsLiked] = useState(post.isLiked);
+  const [isDisliked, setIsDisliked] = useState(post.isDisliked);
   const [isBookmarked, setIsBookmarked] = useState(post.isBookmarked);
   const [likes, setLikes] = useState(post.likes);
+  const [dislikes, setDislikes] = useState(post.dislikes);
   const [comments, setComments] = useState(post.comments);
   const [isLiking, setIsLiking] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showComments, setShowComments] = useState(false);
+  const [showLikesDislikes, setShowLikesDislikes] = useState(false);
+  const [likesDislikesTab, setLikesDislikesTab] = useState<'likes' | 'dislikes'>('likes');
   const [isDeleting, setIsDeleting] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
@@ -38,12 +43,23 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
     if (isLiking) return;
     
     setIsLiking(true);
-    const previousState = isLiked;
+    const previousLikedState = isLiked;
+    const previousDislikedState = isDisliked;
     const previousLikes = likes;
+    const previousDislikes = dislikes;
 
     // Optimistic update
-    setIsLiked(!isLiked);
-    setLikes(isLiked ? likes - 1 : likes + 1);
+    if (isLiked) {
+      setIsLiked(false);
+      setLikes(likes - 1);
+    } else {
+      setIsLiked(true);
+      setLikes(likes + 1);
+      if (isDisliked) {
+        setIsDisliked(false);
+        setDislikes(dislikes - 1);
+      }
+    }
 
     try {
       if (isLiked) {
@@ -54,8 +70,50 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
     } catch (error) {
       console.error('Error toggling like:', error);
       // Revert on error
-      setIsLiked(previousState);
+      setIsLiked(previousLikedState);
+      setIsDisliked(previousDislikedState);
       setLikes(previousLikes);
+      setDislikes(previousDislikes);
+    } finally {
+      setIsLiking(false);
+    }
+  };
+
+  const handleDislike = async () => {
+    if (isLiking) return;
+    
+    setIsLiking(true);
+    const previousLikedState = isLiked;
+    const previousDislikedState = isDisliked;
+    const previousLikes = likes;
+    const previousDislikes = dislikes;
+
+    // Optimistic update
+    if (isDisliked) {
+      setIsDisliked(false);
+      setDislikes(dislikes - 1);
+    } else {
+      setIsDisliked(true);
+      setDislikes(dislikes + 1);
+      if (isLiked) {
+        setIsLiked(false);
+        setLikes(likes - 1);
+      }
+    }
+
+    try {
+      if (isDisliked) {
+        await undislikePost(post.id);
+      } else {
+        await dislikePost(post.id);
+      }
+    } catch (error) {
+      console.error('Error toggling dislike:', error);
+      // Revert on error
+      setIsLiked(previousLikedState);
+      setIsDisliked(previousDislikedState);
+      setLikes(previousLikes);
+      setDislikes(previousDislikes);
     } finally {
       setIsLiking(false);
     }
@@ -85,6 +143,16 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
 
   const handleCommentAdded = () => {
     setComments(comments + 1);
+  };
+
+  const handleShowLikes = () => {
+    setLikesDislikesTab('likes');
+    setShowLikesDislikes(true);
+  };
+
+  const handleShowDislikes = () => {
+    setLikesDislikesTab('dislikes');
+    setShowLikesDislikes(true);
   };
 
   const isOwnPost = currentUserId === post.author.id;
@@ -154,7 +222,34 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
               <Heart 
                 className={`w-5 h-5 ${isLiked ? 'fill-red-500 text-red-500' : ''} group-hover:scale-110 transition-transform`} 
               />
-              <span className="text-sm font-medium">{likes}</span>
+              <span 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (likes > 0) handleShowLikes();
+                }}
+                className="text-sm font-medium cursor-pointer hover:underline"
+              >
+                {likes}
+              </span>
+            </button>
+
+            <button
+              onClick={handleDislike}
+              disabled={isLiking}
+              className="flex items-center space-x-2 text-gray-600 hover:text-orange-500 transition-colors group disabled:opacity-50"
+            >
+              <ThumbsDown 
+                className={`w-5 h-5 ${isDisliked ? 'fill-orange-500 text-orange-500' : ''} group-hover:scale-110 transition-transform`} 
+              />
+              <span 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (dislikes > 0) handleShowDislikes();
+                }}
+                className="text-sm font-medium cursor-pointer hover:underline"
+              >
+                {dislikes}
+              </span>
             </button>
             
             <button 
@@ -184,10 +279,20 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
       {/* Comments Modal */}
       {showComments && (
         <CommentsModal 
-          postId={post.id} 
+          postId={post.id}
+          postAuthorId={post.author.id}
           onClose={() => setShowComments(false)}
           initialCommentCount={comments}
           onCommentAdded={handleCommentAdded}
+        />
+      )}
+
+      {/* Likes/Dislikes Modal */}
+      {showLikesDislikes && (
+        <LikesDislikesModal
+          postId={post.id}
+          onClose={() => setShowLikesDislikes(false)}
+          initialTab={likesDislikesTab}
         />
       )}
     </>

@@ -14,9 +14,11 @@ export interface Post {
   content: string;
   image?: string | null;
   likes: number;
+  dislikes: number;
   comments: number;
   timestamp: string;
   isLiked: boolean;
+  isDisliked: boolean;
   isBookmarked: boolean;
   created_at?: string;
 }

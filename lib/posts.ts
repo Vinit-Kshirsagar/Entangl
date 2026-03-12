@@ -13,6 +13,7 @@ export interface PostWithAuthor {
     avatar_url: string | null
   }
   likes: { id: string; user_id: string }[]
+  dislikes: { id: string; user_id: string }[]
   comments: { id: string }[]
 }
 
@@ -35,7 +36,7 @@ export const getFeedPosts = async (userId: string) => {
   return data
 }
 
-// Get all posts (direct query)
+// Get all posts (direct query) - INCLUDES DISLIKES
 export const getAllPosts = async () => {
   const supabase = createClient()
   
@@ -53,6 +54,10 @@ export const getAllPosts = async () => {
         id,
         user_id
       ),
+      dislikes (
+        id,
+        user_id
+      ),
       comments (
         id
       )
@@ -64,11 +69,11 @@ export const getAllPosts = async () => {
     throw error;
   }
   
-  console.log('Raw posts from Supabase:', data); // Debug log
+  console.log('Raw posts from Supabase:', data);
   return data || [];
 }
 
-// Get posts by specific user
+// Get posts by specific user - INCLUDES DISLIKES
 export const getUserPosts = async (userId: string) => {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -87,6 +92,10 @@ export const getUserPosts = async (userId: string) => {
         id,
         user_id
       ),
+      dislikes (
+        id,
+        user_id
+      ),
       comments (
         id
       )
@@ -99,10 +108,11 @@ export const getUserPosts = async (userId: string) => {
     throw error;
   }
   
-  // Transform the data to include isLiked status
+  // Transform the data to include isLiked and isDisliked status
   const transformedData = data?.map(post => ({
     ...post,
-    isLiked: user ? post.likes?.some((like: any) => like.user_id === user.id) : false
+    isLiked: user ? post.likes?.some((like: any) => like.user_id === user.id) : false,
+    isDisliked: user ? post.dislikes?.some((dislike: any) => dislike.user_id === user.id) : false
   }))
   
   return transformedData || [];
@@ -166,7 +176,7 @@ export const deletePost = async (postId: string) => {
     }
   }
 
-  // Delete the post (likes and comments will cascade delete)
+  // Delete the post (likes, dislikes and comments will cascade delete)
   const { error } = await supabase
     .from('posts')
     .delete()
@@ -182,6 +192,14 @@ export const likePost = async (postId: string) => {
   
   if (!user) throw new Error('Not authenticated')
 
+  // Remove dislike if exists
+  await supabase
+    .from('dislikes')
+    .delete()
+    .eq('post_id', postId)
+    .eq('user_id', user.id)
+
+  // Add like
   const { error } = await supabase
     .from('likes')
     .insert([
@@ -210,6 +228,101 @@ export const unlikePost = async (postId: string) => {
   if (error) throw error
 }
 
+// Dislike a post
+export const dislikePost = async (postId: string) => {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  
+  if (!user) throw new Error('Not authenticated')
+
+  // Remove like if exists
+  await supabase
+    .from('likes')
+    .delete()
+    .eq('post_id', postId)
+    .eq('user_id', user.id)
+
+  // Add dislike
+  const { error } = await supabase
+    .from('dislikes')
+    .insert([
+      {
+        user_id: user.id,
+        post_id: postId
+      }
+    ])
+
+  if (error) throw error
+}
+
+// Remove dislike from a post
+export const undislikePost = async (postId: string) => {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  
+  if (!user) throw new Error('Not authenticated')
+
+  const { error } = await supabase
+    .from('dislikes')
+    .delete()
+    .eq('post_id', postId)
+    .eq('user_id', user.id)
+
+  if (error) throw error
+}
+
+// Get users who liked a post
+export const getPostLikes = async (postId: string) => {
+  const supabase = createClient()
+  
+  const { data, error } = await supabase
+    .from('likes')
+    .select(`
+      created_at,
+      profiles:user_id (
+        id,
+        username,
+        full_name,
+        avatar_url
+      )
+    `)
+    .eq('post_id', postId)
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching likes:', error);
+    throw error;
+  }
+  
+  return data || [];
+}
+
+// Get users who disliked a post
+export const getPostDislikes = async (postId: string) => {
+  const supabase = createClient()
+  
+  const { data, error } = await supabase
+    .from('dislikes')
+    .select(`
+      created_at,
+      profiles:user_id (
+        id,
+        username,
+        full_name,
+        avatar_url
+      )
+    `)
+    .eq('post_id', postId)
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching dislikes:', error);
+    throw error;
+  }
+  
+  return data || [];
+}
+
 // Upload post image to Supabase Storage
 export const uploadPostImage = async (file: File) => {
   const supabase = createClient()
@@ -233,9 +346,8 @@ export const uploadPostImage = async (file: File) => {
 
   return publicUrl
 }
-// Add to lib/posts.ts
 
-// Get comments for a post
+// Get comments for a post (includes replies)
 export const getPostComments = async (postId: string) => {
   const supabase = createClient()
   
@@ -248,9 +360,19 @@ export const getPostComments = async (postId: string) => {
         username,
         full_name,
         avatar_url
+      ),
+      replies:comments!parent_id (
+        *,
+        profiles:user_id (
+          id,
+          username,
+          full_name,
+          avatar_url
+        )
       )
     `)
     .eq('post_id', postId)
+    .is('parent_id', null)
     .order('created_at', { ascending: true })
 
   if (error) {
@@ -274,6 +396,42 @@ export const addComment = async (postId: string, content: string) => {
       {
         user_id: user.id,
         post_id: postId,
+        content
+      }
+    ])
+    .select(`
+      *,
+      profiles:user_id (
+        id,
+        username,
+        full_name,
+        avatar_url
+      )
+    `)
+    .single()
+
+  if (error) throw error
+  return data
+}
+
+// Add reply to a comment
+export const addCommentReply = async (
+  postId: string, 
+  parentCommentId: string, 
+  content: string
+) => {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  
+  if (!user) throw new Error('Not authenticated')
+
+  const { data, error } = await supabase
+    .from('comments')
+    .insert([
+      {
+        user_id: user.id,
+        post_id: postId,
+        parent_id: parentCommentId,
         content
       }
     ])

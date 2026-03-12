@@ -41,7 +41,7 @@ export default function HomePage() {
         
         console.log('Fetched posts from DB:', postsData); // Debug log
 
-        // Transform to match Post interface
+        // In the transformedPosts mapping, add:
         const transformedPosts: Post[] = postsData.map((post: any) => ({
           id: post.id,
           author: {
@@ -53,9 +53,11 @@ export default function HomePage() {
           content: post.content,
           image: post.image_url,
           likes: post.likes?.length || 0,
+          dislikes: post.dislikes?.length || 0,  // ADD THIS
           comments: post.comments?.length || 0,
           timestamp: formatTimestamp(post.created_at),
           isLiked: post.likes?.some((like: any) => like.user_id === user.id) || false,
+          isDisliked: post.dislikes?.some((dislike: any) => dislike.user_id === user.id) || false,  // ADD THIS
           isBookmarked: false
         }));
 
