@@ -19,11 +19,11 @@ export interface Notification {
     id: string
     content: string
     image_url: string | null
-  }
+  } | null
 }
 
 // Get user's notifications
-export const getNotifications = async () => {
+export const getNotifications = async (): Promise<Notification[]> => {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
   
@@ -54,11 +54,15 @@ export const getNotifications = async () => {
     throw error
   }
 
-  return data as Notification[]
+  return (data as any[]).map(item => ({
+    ...item,
+    actor: Array.isArray(item.actor) ? item.actor[0] : item.actor,
+    post: Array.isArray(item.post) ? item.post[0] : item.post
+  })) as Notification[]
 }
 
 // Get unread notification count
-export const getUnreadCount = async () => {
+export const getUnreadCount = async (): Promise<number> => {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
   
@@ -79,7 +83,7 @@ export const getUnreadCount = async () => {
 }
 
 // Mark notification as read
-export const markAsRead = async (notificationId: string) => {
+export const markAsRead = async (notificationId: string): Promise<void> => {
   const supabase = createClient()
   
   const { error } = await supabase
@@ -91,7 +95,7 @@ export const markAsRead = async (notificationId: string) => {
 }
 
 // Mark all notifications as read
-export const markAllAsRead = async () => {
+export const markAllAsRead = async (): Promise<void> => {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
   
@@ -107,7 +111,7 @@ export const markAllAsRead = async () => {
 }
 
 // Delete notification
-export const deleteNotification = async (notificationId: string) => {
+export const deleteNotification = async (notificationId: string): Promise<void> => {
   const supabase = createClient()
   
   const { error } = await supabase
@@ -122,7 +126,7 @@ export const deleteNotification = async (notificationId: string) => {
 export const subscribeToNotifications = (
   userId: string,
   callback: (notification: Notification) => void
-) => {
+): (() => void) => {
   const supabase = createClient()
 
   const channel = supabase
@@ -157,7 +161,12 @@ export const subscribeToNotifications = (
           .single()
 
         if (data) {
-          callback(data as Notification)
+          const notification = {
+            ...data,
+            actor: Array.isArray(data.actor) ? data.actor[0] : data.actor,
+            post: Array.isArray(data.post) ? data.post[0] : data.post
+          } as Notification
+          callback(notification)
         }
       }
     )
@@ -167,7 +176,6 @@ export const subscribeToNotifications = (
     supabase.removeChannel(channel)
   }
 }
-// Add to lib/notifications.ts
 
 // Send push notification
 export const sendPushNotification = async (
@@ -179,7 +187,7 @@ export const sendPushNotification = async (
     url?: string;
     notificationId?: string;
   }
-) => {
+): Promise<void> => {
   try {
     const response = await fetch('/api/push/send', {
       method: 'POST',
@@ -198,4 +206,4 @@ export const sendPushNotification = async (
   } catch (error) {
     console.error('Error sending push notification:', error);
   }
-};
+}
