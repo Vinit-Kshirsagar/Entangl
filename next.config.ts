@@ -2,15 +2,26 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    domains: ['images.unsplash.com', 'api.dicebear.com'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'api.dicebear.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.supabase.co',
+        pathname: '/storage/v1/object/public/**',
+      },
+    ],
   },
-  // Optimize for production builds
   typescript: {
     ignoreBuildErrors: false,
   },
-  // Add experimental features for better performance
   experimental: {
-    // Optimize package imports
     optimizePackageImports: ['lucide-react'],
   },
 };
