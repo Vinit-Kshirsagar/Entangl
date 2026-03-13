@@ -2,15 +2,27 @@ import { NextRequest, NextResponse } from 'next/server';
 import webpush from 'web-push';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 
-// Configure web-push
-webpush.setVapidDetails(
-  `mailto:${process.env.VAPID_EMAIL}`,
-  process.env.VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!
-);
-
 export async function POST(request: NextRequest) {
   try {
+    // Configure web-push here (at runtime, not at module load)
+    const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+    const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
+    const vapidEmail = process.env.VAPID_EMAIL;
+
+    if (!vapidPublicKey || !vapidPrivateKey || !vapidEmail) {
+      console.error('VAPID keys not configured');
+      return NextResponse.json(
+        { error: 'Push notifications not configured' },
+        { status: 500 }
+      );
+    }
+
+    webpush.setVapidDetails(
+      `mailto:${vapidEmail}`,
+      vapidPublicKey,
+      vapidPrivateKey
+    );
+
     const { userId, notification } = await request.json();
 
     if (!userId || !notification) {
