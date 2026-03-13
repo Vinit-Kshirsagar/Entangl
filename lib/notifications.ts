@@ -167,3 +167,35 @@ export const subscribeToNotifications = (
     supabase.removeChannel(channel)
   }
 }
+// Add to lib/notifications.ts
+
+// Send push notification
+export const sendPushNotification = async (
+  userId: string,
+  notification: {
+    title: string;
+    body: string;
+    icon?: string;
+    url?: string;
+    notificationId?: string;
+  }
+) => {
+  try {
+    const response = await fetch('/api/push/send', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        userId,
+        notification
+      })
+    });
+
+    if (!response.ok) {
+      console.error('Failed to send push notification');
+    }
+  } catch (error) {
+    console.error('Error sending push notification:', error);
+  }
+};

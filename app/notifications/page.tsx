@@ -7,6 +7,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { getNotifications, markAsRead, markAllAsRead, deleteNotification, subscribeToNotifications, Notification } from '../../lib/notifications';
 import { getCurrentUser, getCurrentUserProfile } from '@/lib/auth';
+import PushSettings from './components/PushSettings';
 
 export default function NotificationsPage() {
   const router = useRouter();
@@ -167,6 +168,11 @@ export default function NotificationsPage() {
                 <span>Mark all read</span>
               </button>
             )}
+          </div>
+
+          // Add this inside the main container, before notifications list:
+          <div className="p-4 border-b border-gray-200">
+            <PushSettings />
           </div>
 
           {/* Notifications List */}
