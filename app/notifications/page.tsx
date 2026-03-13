@@ -170,7 +170,7 @@ export default function NotificationsPage() {
             )}
           </div>
 
-          // Add this inside the main container, before notifications list:
+
           <div className="p-4 border-b border-gray-200">
             <PushSettings />
           </div>

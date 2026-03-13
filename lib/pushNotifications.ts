@@ -29,35 +29,67 @@ export const requestNotificationPermission = async (): Promise<NotificationPermi
 // Register service worker and subscribe to push
 export const subscribeToPush = async () => {
   if (!isPushSupported()) {
-    throw new Error('Push notifications are not supported');
+    throw new Error('Push notifications are not supported in this browser');
+  }
+
+  // Check if VAPID key is configured
+  if (!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY) {
+    throw new Error('VAPID public key is not configured. Please add NEXT_PUBLIC_VAPID_PUBLIC_KEY to your environment variables.');
   }
 
   try {
     // Register service worker
+    console.log('Registering service worker...');
     const registration = await navigator.serviceWorker.register('/sw.js');
+    console.log('Service worker registered:', registration);
+    
     await navigator.serviceWorker.ready;
+    console.log('Service worker ready');
 
     // Request permission
     const permission = await requestNotificationPermission();
+    console.log('Permission status:', permission);
+    
     if (permission !== 'granted') {
-      throw new Error('Notification permission denied');
+      throw new Error('Notification permission was denied. Please enable notifications in your browser settings.');
+    }
+
+    // Check for existing subscription
+    const existingSubscription = await registration.pushManager.getSubscription();
+    if (existingSubscription) {
+      console.log('Existing subscription found, unsubscribing first...');
+      await existingSubscription.unsubscribe();
     }
 
     // Subscribe to push notifications
+    console.log('Subscribing to push...');
     const subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(
         process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!
       )
     });
+    console.log('Push subscription successful:', subscription);
 
     // Save subscription to database
+    console.log('Saving subscription to database...');
     await savePushSubscription(subscription);
+    console.log('Subscription saved successfully');
 
     return subscription;
-  } catch (error) {
-    console.error('Error subscribing to push:', error);
-    throw error;
+  } catch (error: any) {
+    console.error('Detailed error subscribing to push:', error);
+    
+    // Provide more specific error messages
+    if (error.name === 'NotAllowedError') {
+      throw new Error('Notification permission denied. Please enable notifications in your browser settings.');
+    } else if (error.name === 'NotSupportedError') {
+      throw new Error('Push notifications are not supported in this browser.');
+    } else if (error.message?.includes('VAPID')) {
+      throw new Error('Push service configuration error. Please contact support.');
+    } else {
+      throw new Error(`Registration failed: ${error.message || 'Unknown error'}`);
+    }
   }
 };
 
@@ -70,6 +102,8 @@ export const savePushSubscription = async (subscription: PushSubscription) => {
 
   const subscriptionJSON = subscription.toJSON();
 
+  console.log('Saving subscription for user:', user.id);
+
   const { error } = await supabase
     .from('push_subscriptions')
     .upsert({
@@ -81,7 +115,10 @@ export const savePushSubscription = async (subscription: PushSubscription) => {
       onConflict: 'user_id,endpoint'
     });
 
-  if (error) throw error;
+  if (error) {
+    console.error('Error saving subscription:', error);
+    throw new Error(`Failed to save subscription: ${error.message}`);
+  }
 };
 
 // Unsubscribe from push notifications
