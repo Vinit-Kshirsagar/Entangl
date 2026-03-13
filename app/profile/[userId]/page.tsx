@@ -176,7 +176,7 @@ export default function UserProfilePage() {
     <div className="min-h-screen bg-gray-50">
       <Navbar currentView="profile" userAvatar={currentUserAvatar} />
       
-      <main className="max-w-4xl mx-auto px-4 pt-20 pb-8">
+      <main className="max-w-4xl mx-auto px-4 pt-32 md:pt-20 pb-8">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           <ProfileHeader 
             profile={{

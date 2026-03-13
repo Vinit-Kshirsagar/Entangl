@@ -213,60 +213,62 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
             </div>
           )}
           
-          <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-            <button
-              onClick={handleLike}
-              disabled={isLiking}
-              className="flex items-center space-x-2 text-gray-600 hover:text-red-500 transition-colors group disabled:opacity-50"
-            >
-              <Heart 
-                className={`w-5 h-5 ${isLiked ? 'fill-red-500 text-red-500' : ''} group-hover:scale-110 transition-transform`} 
-              />
-              <span 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (likes > 0) handleShowLikes();
-                }}
-                className="text-sm font-medium cursor-pointer hover:underline"
+          <div className="flex flex-wrap items-center justify-between gap-y-3 pt-3 border-t border-gray-100">
+            <div className="flex items-center space-x-4 sm:space-x-6">
+              <button
+                onClick={handleLike}
+                disabled={isLiking}
+                className="flex items-center space-x-1.5 sm:space-x-2 text-gray-600 hover:text-red-500 transition-colors group disabled:opacity-50"
               >
-                {likes}
-              </span>
-            </button>
+                <Heart 
+                  className={`w-5 h-5 ${isLiked ? 'fill-red-500 text-red-500' : ''} group-hover:scale-110 transition-transform`} 
+                />
+                <span 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (likes > 0) handleShowLikes();
+                  }}
+                  className="text-sm font-medium cursor-pointer hover:underline"
+                >
+                  {likes}
+                </span>
+              </button>
 
-            <button
-              onClick={handleDislike}
-              disabled={isLiking}
-              className="flex items-center space-x-2 text-gray-600 hover:text-orange-500 transition-colors group disabled:opacity-50"
-            >
-              <ThumbsDown 
-                className={`w-5 h-5 ${isDisliked ? 'fill-orange-500 text-orange-500' : ''} group-hover:scale-110 transition-transform`} 
-              />
-              <span 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (dislikes > 0) handleShowDislikes();
-                }}
-                className="text-sm font-medium cursor-pointer hover:underline"
+              <button
+                onClick={handleDislike}
+                disabled={isLiking}
+                className="flex items-center space-x-1.5 sm:space-x-2 text-gray-600 hover:text-orange-500 transition-colors group disabled:opacity-50"
               >
-                {dislikes}
-              </span>
-            </button>
-            
-            <button 
-              onClick={() => setShowComments(true)}
-              className="flex items-center space-x-2 text-gray-600 hover:text-blue-500 transition-colors group"
-            >
-              <MessageCircle className="w-5 h-5 group-hover:scale-110 transition-transform" />
-              <span className="text-sm font-medium">{comments}</span>
-            </button>
-            
-            <button className="flex items-center space-x-2 text-gray-600 hover:text-green-500 transition-colors group">
-              <Share2 className="w-5 h-5 group-hover:scale-110 transition-transform" />
-            </button>
+                <ThumbsDown 
+                  className={`w-5 h-5 ${isDisliked ? 'fill-orange-500 text-orange-500' : ''} group-hover:scale-110 transition-transform`} 
+                />
+                <span 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (dislikes > 0) handleShowDislikes();
+                  }}
+                  className="text-sm font-medium cursor-pointer hover:underline"
+                >
+                  {dislikes}
+                </span>
+              </button>
+              
+              <button 
+                onClick={() => setShowComments(true)}
+                className="flex items-center space-x-1.5 sm:space-x-2 text-gray-600 hover:text-blue-500 transition-colors group"
+              >
+                <MessageCircle className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                <span className="text-sm font-medium">{comments}</span>
+              </button>
+              
+              <button className="flex items-center space-x-1.5 sm:space-x-2 text-gray-600 hover:text-green-500 transition-colors group">
+                <Share2 className="w-5 h-5 group-hover:scale-110 transition-transform" />
+              </button>
+            </div>
             
             <button
               onClick={() => setIsBookmarked(!isBookmarked)}
-              className="flex items-center space-x-2 text-gray-600 hover:text-yellow-500 transition-colors group"
+              className="flex items-center space-x-1.5 sm:space-x-2 text-gray-600 hover:text-yellow-500 transition-colors group"
             >
               <Bookmark 
                 className={`w-5 h-5 ${isBookmarked ? 'fill-yellow-500 text-yellow-500' : ''} group-hover:scale-110 transition-transform`} 

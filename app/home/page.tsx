@@ -103,7 +103,7 @@ export default function HomePage() {
     <div className="min-h-screen bg-gray-50">
       <Navbar currentView="home" userAvatar={userAvatar} />
       
-      <main className="max-w-2xl mx-auto px-4 pt-20 pb-8">
+      <main className="max-w-2xl mx-auto px-4 pt-32 md:pt-20 pb-8">
         {posts.length === 0 ? (
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
             <p className="text-gray-500 text-lg mb-4">No posts yet!</p>

@@ -25,25 +25,25 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
       <div className="h-48 bg-gradient-to-r from-purple-400 via-pink-500 to-red-400"></div>
       
       <div className="px-6 pb-6">
-        <div className="flex items-end justify-between -mt-16 mb-4">
+        <div className="flex flex-col sm:flex-row items-center sm:items-end justify-between -mt-16 mb-4 space-y-4 sm:space-y-0 text-center sm:text-left">
           <img
             src={profile.avatar}
             alt={profile.name}
-            className="w-32 h-32 rounded-full border-4 border-white object-cover shadow-lg"
+            className="w-32 h-32 rounded-full border-4 border-white object-cover shadow-lg mx-auto sm:mx-0"
           />
           
           {isOwnProfile ? (
-            <div className="flex space-x-3">
+            <div className="flex space-x-3 w-full sm:w-auto justify-center sm:justify-start">
               <button
                 onClick={() => router.push('/profile/edit')}
-                className="px-6 py-2 rounded-full font-semibold transition-all bg-purple-600 text-white hover:bg-purple-700 hover:shadow-lg flex items-center space-x-2"
+                className="flex-1 sm:flex-none justify-center px-4 sm:px-6 py-2 rounded-full font-semibold transition-all bg-purple-600 text-white hover:bg-purple-700 hover:shadow-lg flex items-center space-x-2"
               >
                 <Settings className="w-4 h-4" />
                 <span>Edit Profile</span>
               </button>
               <button
                 onClick={onLogout}
-                className="px-6 py-2 rounded-full font-semibold transition-all bg-red-500 text-white hover:bg-red-600 hover:shadow-lg flex items-center space-x-2"
+                className="flex-1 sm:flex-none justify-center px-4 sm:px-6 py-2 rounded-full font-semibold transition-all bg-red-500 text-white hover:bg-red-600 hover:shadow-lg flex items-center space-x-2"
               >
                 <LogOut className="w-4 h-4" />
                 <span>Logout</span>
@@ -52,7 +52,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           ) : (
             <button
               onClick={onFollowToggle}
-              className={`px-6 py-2 rounded-full font-semibold transition-all ${
+              className={`w-full sm:w-auto px-6 py-2 rounded-full font-semibold transition-all ${
                 profile.isFollowing
                   ? 'bg-gray-200 text-gray-800 hover:bg-gray-300'
                   : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:shadow-lg'

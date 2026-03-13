@@ -153,7 +153,7 @@ export default function NotificationsPage() {
     <div className="min-h-screen bg-gray-50">
       <Navbar currentView="notifications" userAvatar={userAvatar} />
       
-      <main className="max-w-2xl mx-auto px-4 pt-20 pb-8">
+      <main className="max-w-2xl mx-auto px-4 pt-32 md:pt-20 pb-8">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           {/* Header */}
           <div className="p-4 border-b border-gray-200 flex items-center justify-between">

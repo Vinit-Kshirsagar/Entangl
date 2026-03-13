@@ -72,7 +72,7 @@ export default function CreatePostPage() {
     <div className="min-h-screen bg-gray-50">
       <Navbar currentView="create" userAvatar={userAvatar} />
       
-      <main className="max-w-2xl mx-auto px-4 pt-24 pb-8">
+      <main className="max-w-2xl mx-auto px-4 pt-32 md:pt-24 pb-8">
         <PostForm 
           userAvatar={userAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=default`}
           onSubmit={handlePostSubmit}
