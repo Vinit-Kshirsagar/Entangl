@@ -1,9 +1,10 @@
 import type { Metadata } from 'next';
 import Script from 'next/script';
+import AuthGuard from '@/components/AuthGuard';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'SocialHub - Connect & Share',
+  title: 'Entangl - Connect & Share',
   description: 'A modern social media platform',
 };
 
@@ -32,7 +33,9 @@ export default function RootLayout({
           />
         )}
       </head>
-      <body>{children}</body>
+      <body>
+        <AuthGuard>{children}</AuthGuard>
+      </body>
     </html>
   );
 }

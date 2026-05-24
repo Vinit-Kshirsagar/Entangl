@@ -14,6 +14,9 @@ import { getUserPosts } from '@/lib/posts';
 import { getCurrentUser } from '@/lib/auth';
 import { signOut } from '@/lib/auth';
 import { Post } from '@/lib/types';
+import { createClient } from '@/lib/supabase/client';
+
+const OWNER_EMAIL = 'rekt11.cam@gmail.com';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -25,6 +28,8 @@ export default function ProfilePage() {
   const [showFollowing, setShowFollowing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [isOwner, setIsOwner] = useState(false);
+  const [requestCount, setRequestCount] = useState(0);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -36,6 +41,22 @@ export default function ProfilePage() {
         }
 
         setCurrentUserId(user.id);
+
+        // Check if current user is the owner
+        if (user.email === OWNER_EMAIL) {
+          setIsOwner(true);
+          // Fetch pending request count for owner
+          const supabase = createClient();
+          const { count: pendingCount } = await supabase
+            .from('profiles')
+            .select('*', { count: 'exact', head: true })
+            .eq('status', 'pending');
+          const { count: emailChangeCount } = await supabase
+            .from('profiles')
+            .select('*', { count: 'exact', head: true })
+            .like('status', 'email_change_pending:%');
+          setRequestCount((pendingCount || 0) + (emailChangeCount || 0));
+        }
 
         const profileData = await getUserProfile(user.id);
         setProfile(profileData);
@@ -177,6 +198,8 @@ export default function ProfilePage() {
             onFollowToggle={() => {}}
             onLogout={handleLogout}
             isOwnProfile={true}
+            isOwner={isOwner}
+            requestCount={requestCount}
           />
           
           <FollowStats

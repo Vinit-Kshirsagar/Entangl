@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { LogOut, Settings } from 'lucide-react';
+import { LogOut, Settings, ClipboardList } from 'lucide-react';
 import { UserProfile } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 
@@ -10,13 +10,17 @@ interface ProfileHeaderProps {
   onFollowToggle: () => void;
   onLogout: () => void;
   isOwnProfile?: boolean;
+  isOwner?: boolean;
+  requestCount?: number;
 }
 
 const ProfileHeader: React.FC<ProfileHeaderProps> = ({ 
   profile, 
   onFollowToggle, 
   onLogout,
-  isOwnProfile = true 
+  isOwnProfile = true,
+  isOwner = false,
+  requestCount = 0
 }) => {
   const router = useRouter();
 
@@ -33,7 +37,21 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           />
           
           {isOwnProfile ? (
-            <div className="flex space-x-3 w-full sm:w-auto justify-center sm:justify-start">
+            <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-center sm:justify-start">
+              {isOwner && (
+                <button
+                  onClick={() => router.push('/admin/requests')}
+                  className="flex-1 sm:flex-none justify-center px-4 sm:px-5 py-2 rounded-full font-semibold transition-all bg-amber-500 text-white hover:bg-amber-600 hover:shadow-lg flex items-center space-x-2 relative"
+                >
+                  <ClipboardList className="w-4 h-4" />
+                  <span>Requests</span>
+                  {requestCount > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[20px] h-[20px] bg-red-500 text-white text-xs rounded-full flex items-center justify-center px-1 font-bold">
+                      {requestCount > 9 ? '9+' : requestCount}
+                    </span>
+                  )}
+                </button>
+              )}
               <button
                 onClick={() => router.push('/profile/edit')}
                 className="flex-1 sm:flex-none justify-center px-4 sm:px-6 py-2 rounded-full font-semibold transition-all bg-purple-600 text-white hover:bg-purple-700 hover:shadow-lg flex items-center space-x-2"

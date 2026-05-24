@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { signIn } from '@/lib/auth';
+import { signIn, getCurrentUserProfile } from '@/lib/auth';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -18,6 +18,17 @@ export default function LoginPage() {
     
     try {
       await signIn(email, password);
+
+      // Check profile status after login
+      const profile = await getCurrentUserProfile();
+      if (profile) {
+        const status: string = profile.status;
+        if (status === 'pending' || status === 'rejected') {
+          router.push('/approval-status');
+          return;
+        }
+      }
+
       router.push('/home');
       router.refresh();
     } catch (err: any) {
@@ -58,9 +69,18 @@ export default function LoginPage() {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Password
-            </label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Password
+              </label>
+              <button
+                type="button"
+                onClick={() => router.push('/forgot-password')}
+                className="text-sm text-purple-600 hover:text-purple-800 font-medium hover:underline transition-colors"
+              >
+                Forgot Password?
+              </button>
+            </div>
             <input
               type="password"
               value={password}

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { signUp } from '@/lib/auth';
+import { signUp, signOut } from '@/lib/auth';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -28,9 +28,11 @@ export default function RegisterPage() {
         formData.username
       );
       
-      // Redirect to profile edit page to complete profile
-      alert('Account created! Please complete your profile.');
-      router.push('/profile/edit');
+      // Sign out immediately — account needs admin approval
+      await signOut();
+      
+      // Redirect to login with a message
+      router.push('/approval-status');
     } catch (err: any) {
       setError(err.message || 'Failed to create account');
       setIsLoading(false);

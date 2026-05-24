@@ -29,6 +29,6 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts"
-, "app/create-post", "postcss.config.js"  ],
+, "app/create-post", "postcss.config.js", "script/generate-vapid-keys.js"  ],
   "exclude": ["node_modules"]
 }
